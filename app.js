@@ -1,7 +1,7 @@
 const tg = window.Telegram.WebApp;
-tg.expand(); // Раскрываем приложение на весь экран
+tg.expand();
 
-// ТВОИ ТОВАРЫ
+// Твои товары (Ссылки взяты из твоего проекта)
 const products = [
     { id: 1, name: "Шаурма", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
     { id: 2, name: "Хот-дог", price: 1200, img: "https://infoarystan.github.io/magazin-test/hotdog.jpg" },
@@ -11,33 +11,37 @@ const products = [
 
 let cart = {};
 
-// Функция отрисовки товаров
+// Функция отрисовки (показывает товары на экране)
 function render() {
     const list = document.getElementById('product-list');
-    list.innerHTML = ""; // Очищаем, чтобы не дублировалось
+    list.innerHTML = "";
     
     products.forEach(p => {
         const el = document.createElement('div');
         el.className = 'item';
+        
         el.innerHTML = `
-            <img src="${p.img}" alt="${p.name}">
+            <img src="${p.img}" style="width:100%; height:100px; object-fit:cover; border-radius:5px;">
             <h3>${p.name}</h3>
             <p>${p.price} ₸</p>
-            <button class="btn" onclick="addToCart(${p.id})">В корзину</button>
+            <button onclick="addToCart(${p.id})" style="width:100%; padding:10px; background:#3390ec; color:white; border:none; border-radius:5px;">В корзину</button>
         `;
+        
         list.appendChild(el);
     });
 }
 
-// Функция добавления в корзину (сделали глобальной)
-window.addToCart = function(id) {
-    if (!cart[id]) cart[id] = 0;
+// Добавление в корзину
+function addToCart(id) {
+    if (!cart[id]) {
+        cart[id] = 0;
+    }
     cart[id]++;
-    updateBtn();
-};
+    updateMainButton();
+}
 
-// Обновление Главной кнопки
-function updateBtn() {
+// Обновление главной кнопки (внизу)
+function updateMainButton() {
     let total = 0;
     for (let id in cart) {
         let p = products.find(x => x.id == id);
@@ -45,34 +49,20 @@ function updateBtn() {
             total += p.price * cart[id];
         }
     }
-
+    
     if (total > 0) {
-        // ВОТ ТУТ БЫЛА ОШИБКА. Добавил обратные кавычки ` `
-        tg.MainButton.setText(`Купить: ${total} ₸`);
+        tg.MainButton.text = Оплатить ${total} ₸;
         tg.MainButton.show();
     } else {
         tg.MainButton.hide();
     }
 }
 
-// Обработка клика по кнопке "Купить"
-Telegram.WebApp.onEvent('mainButtonClicked', function(){
-    // Считаем итог еще раз для отправки
-    let total = 0;
-    for (let id in cart) {
-        let p = products.find(x => x.id == id);
-        if (p) total += p.price * cart[id];
-    }
-
-    // Формируем данные: и корзина, и сумма
-    const data = {
-        cart: cart,
-        total: total
-    };
-    
-    // Отправляем данные боту (в n8n)
-    tg.sendData(JSON.stringify(data)); 
+// ОТПРАВКА ДАННЫХ (Самое важное)
+Telegram.WebApp.onEvent('mainButtonClicked', function() {
+    // Отправляем данные в n8n
+    tg.sendData(JSON.stringify(cart));
 });
 
-// Запускаем отрисовку при старте
+// Запускаем магазин
 render();
