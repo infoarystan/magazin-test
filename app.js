@@ -1,5 +1,5 @@
 const tg = window.Telegram.WebApp;
-tg.expand();
+tg.expand(); // Раскрываем приложение на весь экран
 
 // ТВОИ ТОВАРЫ
 const products = [
@@ -11,9 +11,11 @@ const products = [
 
 let cart = {};
 
+// Функция отрисовки товаров
 function render() {
     const list = document.getElementById('product-list');
-    list.innerHTML = "";
+    list.innerHTML = ""; // Очищаем, чтобы не дублировалось
+    
     products.forEach(p => {
         const el = document.createElement('div');
         el.className = 'item';
@@ -21,42 +23,56 @@ function render() {
             <img src="${p.img}" alt="${p.name}">
             <h3>${p.name}</h3>
             <p>${p.price} ₸</p>
-            <button onclick="add(${p.id})">В корзину</button>
+            <button class="btn" onclick="addToCart(${p.id})">В корзину</button>
         `;
         list.appendChild(el);
     });
 }
 
-function add(id) {
+// Функция добавления в корзину (сделали глобальной)
+window.addToCart = function(id) {
     if (!cart[id]) cart[id] = 0;
     cart[id]++;
     updateBtn();
-}
+};
 
+// Обновление Главной кнопки
 function updateBtn() {
     let total = 0;
     for (let id in cart) {
         let p = products.find(x => x.id == id);
         if (p) {
-            // ВОТ ТУТ БЫЛА ОШИБКА, ТЕПЕРЬ ИСПРАВЛЕНО:
             total += p.price * cart[id];
         }
     }
+
     if (total > 0) {
-        tg.MainButton.text = Купить на ${total} ₸;
+        // ВОТ ТУТ БЫЛА ОШИБКА. Добавил обратные кавычки ` `
+        tg.MainButton.setText(`Купить: ${total} ₸`);
         tg.MainButton.show();
     } else {
         tg.MainButton.hide();
     }
 }
 
-// ГЛАВНОЕ СОБЫТИЕ
+// Обработка клика по кнопке "Купить"
 Telegram.WebApp.onEvent('mainButtonClicked', function(){
-    // Маячок для проверки
-    alert("Данные отправляются..."); 
+    // Считаем итог еще раз для отправки
+    let total = 0;
+    for (let id in cart) {
+        let p = products.find(x => x.id == id);
+        if (p) total += p.price * cart[id];
+    }
+
+    // Формируем данные: и корзина, и сумма
+    const data = {
+        cart: cart,
+        total: total
+    };
     
-    // Отправка данных
-    tg.sendData(JSON.stringify(cart)); 
+    // Отправляем данные боту (в n8n)
+    tg.sendData(JSON.stringify(data)); 
 });
 
+// Запускаем отрисовку при старте
 render();
