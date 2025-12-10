@@ -3,9 +3,10 @@ tg.expand();
 
 // Твои товары. Цена в тенге (просто число)
 const products = [
-    { id: 1, name: "Донер Говяжий", price: 1800, img: "ССЫЛКА_НА_БУРГЕР" },
-    { id: 2, name: "Фри Стандарт", price: 800, img: "ССЫЛКА_НА_ФРИ" },
-    { id: 3, name: "Coca-Cola 0.5", price: 450, img: "ССЫЛКА_НА_КОЛУ" }
+    { id: 1, name: "Шаурма с курицей", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
+    { id: 2, name: "Хот дог с молосной сосиской", price: 1200, img: "https://infoarystan.github.io/magazin-test/hotdog.jpg" },
+    { id: 3, name: "Фри", price: 450, img: "https://infoarystan.github.io/magazin-test/fri.jpg" }
+    { id: 4, name: "Бургер с говяжей котлетой", price: 2000, img: "https://infoarystan.github.io/magazin-test/burger.jpg" }
 ];
 
 const list = document.getElementById('product-list');
