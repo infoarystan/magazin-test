@@ -3,7 +3,7 @@ tg.expand();
 
 // ТВОИ ТОВАРЫ (Обрати внимание на запятые в конце строк!)
 const products = [
-    { id: 1, name: "Шаурма с курицей", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
+    { id: 1, name: "шаурма куриная", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
     { id: 2, name: "Хот-дог", price: 1200, img: "https://infoarystan.github.io/magazin-test/hotdog.jpg" },
     { id: 3, name: "Фри", price: 450, img: "https://infoarystan.github.io/magazin-test/fri.jpg" },
     { id: 4, name: "Бургер", price: 2000, img: "https://infoarystan.github.io/magazin-test/burger.jpg" }
