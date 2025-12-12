@@ -89,3 +89,45 @@ tg.MainButton.onClick(async function() {
 });
 
 render();
+// ... (начало файла то же самое)
+
+tg.MainButton.onClick(async function() {
+    tg.MainButton.showProgress();
+
+    const payload = {
+        cart: cart,
+        initData: tg.initData, 
+        user: tg.initDataUnsafe.user
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                // Добавляем заголовки, чтобы браузер не ругался
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Если сервер ответил ошибкой (например 404 или 500)
+        if (!response.ok) {
+            throw new Error(`Сервер ответил: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            tg.close();
+            if (result.paymentLink) tg.openLink(result.paymentLink);
+        } else {
+            alert('Ошибка заказа: ' + JSON.stringify(result));
+        }
+    } catch (error) {
+        // ТЕПЕРЬ ОН ПОКАЖЕТ РЕАЛЬНУЮ ПРИЧИНУ
+        alert('Критическая ошибка: ' + error.message);
+    } finally {
+        tg.MainButton.hideProgress();
+    }
+});
