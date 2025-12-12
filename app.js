@@ -1,7 +1,11 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Твои товары (Ссылки взяты из твоего проекта)
+// АДРЕС ТВОЕГО N8N (Сюда вставим Webhook URL позже)
+// Пока поставь заглушку или адрес туннеля, если есть
+const API_URL = "https://tasty-dog-48.hooks.n8n.cloud/webhook/order"; 
+
+// Товары (Позже сделаем подгрузку из Airtable, пока оставим так для теста)
 const products = [
     { id: 1, name: "Шаурма", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
     { id: 2, name: "Хот-дог", price: 1200, img: "https://infoarystan.github.io/magazin-test/hotdog.jpg" },
@@ -11,58 +15,77 @@ const products = [
 
 let cart = {};
 
-// Функция отрисовки (показывает товары на экране)
 function render() {
     const list = document.getElementById('product-list');
     list.innerHTML = "";
-    
     products.forEach(p => {
         const el = document.createElement('div');
         el.className = 'item';
-        
         el.innerHTML = `
-            <img src="${p.img}" style="width:100%; height:100px; object-fit:cover; border-radius:5px;">
+            <img src="${p.img}">
             <h3>${p.name}</h3>
             <p>${p.price} ₸</p>
-            <button onclick="addToCart(${p.id})" style="width:100%; padding:10px; background:#3390ec; color:white; border:none; border-radius:5px;">В корзину</button>
+            <button onclick="addToCart(${p.id})">В корзину</button>
         `;
-        
         list.appendChild(el);
     });
 }
 
-// Добавление в корзину
 function addToCart(id) {
-    if (!cart[id]) {
-        cart[id] = 0;
-    }
+    if (!cart[id]) cart[id] = 0;
     cart[id]++;
     updateMainButton();
 }
 
-// Обновление главной кнопки (внизу)
 function updateMainButton() {
     let total = 0;
     for (let id in cart) {
         let p = products.find(x => x.id == id);
-        if (p) {
-            total += p.price * cart[id];
-        }
+        if (p) total += p.price * cart[id];
     }
     
     if (total > 0) {
-        tg.MainButton.text = Оплатить ${total} ₸;
+        tg.MainButton.text = `Оплатить ${total} ₸`;
         tg.MainButton.show();
     } else {
         tg.MainButton.hide();
     }
 }
 
-// ОТПРАВКА ДАННЫХ (Самое важное)
-Telegram.WebApp.onEvent('mainButtonClicked', function() {
-    // Отправляем данные в n8n
-    tg.sendData(JSON.stringify(cart));
+// НОВАЯ ЛОГИКА ОТПРАВКИ
+tg.MainButton.onClick(async function() {
+    tg.MainButton.showProgress(); // Показываем крутилку загрузки
+
+    // Формируем данные заказа
+    const payload = {
+        cart: cart,
+        initData: tg.initData, // !ВАЖНО: Данные для проверки безопасности
+        user: tg.initDataUnsafe.user
+    };
+
+    try {
+        // Отправляем запрос в n8n
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success' && result.paymentLink) {
+            // Если все ок, открываем ссылку на оплату
+            tg.close(); // Закрываем мини-апп (или можно redirect)
+            tg.openLink(result.paymentLink); // Открываем платежку
+        } else {
+            alert('Ошибка создания заказа: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Ошибка связи с сервером. Попробуйте позже.');
+        console.error(error);
+    } finally {
+        tg.MainButton.hideProgress();
+    }
 });
 
-// Запускаем магазин
 render();
