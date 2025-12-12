@@ -1,11 +1,9 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// АДРЕС ТВОЕГО N8N (Сюда вставим Webhook URL позже)
-// Пока поставь заглушку или адрес туннеля, если есть
+// Твоя ссылка на сервер
 const API_URL = "https://afraid-ape-11.hooks.n8n.cloud/webhook/order"; 
 
-// Товары (Позже сделаем подгрузку из Airtable, пока оставим так для теста)
 const products = [
     { id: 1, name: "Шаурма", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
     { id: 2, name: "Хот-дог", price: 1200, img: "https://infoarystan.github.io/magazin-test/hotdog.jpg" },
@@ -52,82 +50,39 @@ function updateMainButton() {
     }
 }
 
-// НОВАЯ ЛОГИКА ОТПРАВКИ
-tg.MainButton.onClick(async function() {
-    tg.MainButton.showProgress(); // Показываем крутилку загрузки
+// ПРОСТАЯ ФУНКЦИЯ ОТПРАВКИ
+tg.MainButton.onClick(function() {
+    tg.MainButton.showProgress();
 
-    // Формируем данные заказа
-    const payload = {
-        cart: cart,
-        initData: tg.initData, // !ВАЖНО: Данные для проверки безопасности
-        user: tg.initDataUnsafe.user
-    };
-
-    try {
-        // Отправляем запрос в n8n
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (result.status === 'success' && result.paymentLink) {
-            // Если все ок, открываем ссылку на оплату
-            tg.close(); // Закрываем мини-апп (или можно redirect)
-            tg.openLink(result.paymentLink); // Открываем платежку
-        } else {
-            alert('Ошибка создания заказа: ' + (result.message || 'Unknown error'));
+    // Отправляем просто текст, чтобы браузер не ругался
+    fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain'
+        },
+        body: JSON.stringify({
+            cart: cart,
+            user: tg.initDataUnsafe.user
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Ошибка сервера: " + response.status);
         }
-    } catch (error) {
-        alert('Ошибка связи с сервером. Попробуйте позже.');
-        console.error(error);
-    } finally {
+        return response.json();
+    })
+    .then(data => {
+        // Если все хорошо
+        tg.close();
+        if (data.paymentLink) {
+            tg.openLink(data.paymentLink);
+        }
+    })
+    .catch(error => {
+        // Если ошибка
+        alert("Не удалось создать заказ. " + error.message);
         tg.MainButton.hideProgress();
-    }
+    });
 });
 
 render();
-// ... (начало файла то же самое)
-
-tg.MainButton.onClick(async function() {
-    tg.MainButton.showProgress();
-
-    const payload = {
-        cart: cart,
-        initData: tg.initData, 
-        user: tg.initDataUnsafe.user
-    };
-
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                // Добавляем заголовки, чтобы браузер не ругался
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        // Если сервер ответил ошибкой (например 404 или 500)
-        if (!response.ok) {
-            throw new Error(`Сервер ответил: ${response.status} ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            tg.close();
-            if (result.paymentLink) tg.openLink(result.paymentLink);
-        } else {
-            alert('Ошибка заказа: ' + JSON.stringify(result));
-        }
-    } catch (error) {
-        // ТЕПЕРЬ ОН ПОКАЖЕТ РЕАЛЬНУЮ ПРИЧИНУ
-        alert('Критическая ошибка: ' + error.message);
-    } finally {
-        tg.MainButton.hideProgress();
-    }
-});
