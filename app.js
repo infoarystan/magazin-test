@@ -2,7 +2,7 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 
 // Твоя ссылка на сервер
-const API_URL = "https://afraid-ape-11.hooks.n8n.cloud/webhook/order"; 
+const API_URL = "https://breezy-lionfish-5.hooks.n8n.cloud/"; 
 
 const products = [
     { id: 1, name: "Шаурма", price: 1800, img: "https://infoarystan.github.io/magazin-test/shaurma.jpg" },
