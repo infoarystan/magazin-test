@@ -3,7 +3,7 @@ tg.expand();
 
 // АДРЕС ТВОЕГО N8N (Сюда вставим Webhook URL позже)
 // Пока поставь заглушку или адрес туннеля, если есть
-const API_URL = "https://tasty-dog-48.hooks.n8n.cloud/webhook/order"; 
+const API_URL = "https://donerking-new.hooks.n8n.cloud/"; 
 
 // Товары (Позже сделаем подгрузку из Airtable, пока оставим так для теста)
 const products = [
